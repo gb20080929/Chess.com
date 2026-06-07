@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Chess</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M19 22H5V20H19V22ZM17 10C17 7.24 14.76 5 12 5C9.24 5 7 7.24 7 10C7 11.83 8 13.43 9.46 14.34L8 18H16L14.54 14.34C16 13.43 17 11.83 17 10ZM12 3L14 1H10L12 3Z"
+                        fill="#10B981" />
+                </svg>
+                <h1>Premium Chess</h1>
+            </div>
+            <div class="controls">
+                <button id="new-game-btn" class="btn primary">New Game</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="undo-btn" class="btn secondary" style="flex: 1;">Undo Move</button>
+                    <button id="archive-btn" class="btn secondary" style="flex: 1;">Archive</button>
+                </div>
+                <button id="flip-btn" class="btn secondary">Flip Board</button>
+                <select id="theme-select" class="btn secondary"
+                    style="width: 100%; margin-top: 0.5rem; outline: none; cursor: pointer;">
+                    <option value="classic">Classic Green</option>
+                    <option value="wood">Wood</option>
+                    <option value="slate">Slate</option>
+                    <option value="ocean">Ocean</option>
+                </select>
+            </div>
+            <div class="game-info">
+                <div class="status-panel">
+                    <h3>Status</h3>
+                    <p id="game-status">White to move</p>
+                    <button id="review-btn" class="btn primary"
+                        style="width: 100%; margin-top: 10px; background-color: #8b5cf6; display: none;">Game
+                        Review</button>
+                    <div class="review-controls" style="display: flex; gap: 0.5rem; margin-top: 10px;">
+                        <button id="first-btn" class="btn secondary" style="flex: 1;">|&lt;</button>
+                        <button id="prev-btn" class="btn secondary" style="flex: 1;">&lt;</button>
+                        <button id="play-btn" class="btn secondary" style="flex: 2;">Play</button>
+                        <button id="next-btn" class="btn secondary" style="flex: 1;">&gt;</button>
+                        <button id="last-btn" class="btn secondary" style="flex: 1;">&gt;|</button>
+                    </div>
+                </div>
+                <div class="history-panel">
+                    <h3>Move History</h3>
+                    <div id="move-history" class="move-history"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="game-area">
+
+                <div class="player-panel top-player glass-panel">
+                    <div class="player-info">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Black" alt="Black Player"
+                            class="avatar">
+                        <span class="player-name">Opponent</span>
+                    </div>
+                    <div id="captured-by-black" class="captured-pieces"></div>
+                </div>
+
+                <div class="board-container">
+                    <div class="eval-bar-wrapper" id="eval-bar">
+                        <div id="eval-bar-fill" class="eval-bar-fill"></div>
+                        <span id="eval-score-white" class="eval-score white-score">0.0</span>
+                        <span id="eval-score-black" class="eval-score black-score" style="display: none;">0.0</span>
+                    </div>
+                    <div class="board-wrapper">
+                        <div id="board" class="board"></div>
+
+                        <!-- Game Over Overlay -->
+                        <div id="game-over-overlay" class="game-over-overlay" style="display: none;">
+                            <button id="close-overlay-btn" class="close-overlay-btn">&times;</button>
+                            <h2 id="game-over-title">White Won</h2>
+                            <p id="game-over-reason">by Checkmate</p>
+                            <div class="overlay-buttons">
+                                <button id="overlay-review-btn" class="btn primary"
+                                    style="background-color: #8b5cf6;">Game Review</button>
+                            </div>
+                        </div>
+
+                        <!-- Archive Overlay -->
+                        <div id="archive-overlay" class="game-over-overlay" style="display: none;">
+                            <button id="close-archive-btn" class="close-overlay-btn">&times;</button>
+                            <h2 style="color: white; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Past
+                                Games</h2>
+                            <div id="archive-list" class="archive-list"></div>
+                        </div>
+
+                        <!-- New Game Modal -->
+                        <div id="new-game-modal" class="game-over-overlay" style="display: none;">
+                            <button id="close-new-game-btn" class="close-overlay-btn">&times;</button>
+                            <h2 style="color: white; margin-bottom: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                Start New Game</h2>
+
+                            <!-- Step 1: Mode picker -->
+                            <div id="mode-picker" class="overlay-buttons" style="gap: 1.5rem; flex-direction: column;">
+                                <button id="play-friends-btn" class="btn primary">Play with Friends</button>
+                                <button id="vs-computer-btn" class="btn secondary">Play vs Computer</button>
+                            </div>
+
+                            <!-- Step 2: Color picker -->
+                            <div id="color-picker"
+                                style="display: none; flex-direction: column; align-items: center; gap: 1rem;">
+                                <p style="color: rgba(255,255,255,0.7); margin: 0;">Choose your color</p>
+                                <div class="overlay-buttons" style="gap: 1.5rem;">
+                                    <button id="play-white-btn" class="btn secondary">Play as White</button>
+                                    <button id="play-black-btn" class="btn primary"
+                                        style="background-color: #333; color: white;">Play as Black</button>
+                                </div>
+                                <button id="back-btn" class="btn secondary"
+                                    style="margin-top: 0.5rem; font-size: 0.8rem;">&#8592; Back</button>
+                            </div>
+                        </div>
+
+                    </div><!-- end board-wrapper -->
+                </div><!-- end board-container -->
+
+                <div class="player-panel bottom-player glass-panel">
+                    <div class="player-info">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=White" alt="White Player"
+                            class="avatar">
+                        <span class="player-name">You</span>
+                    </div>
+                    <div id="captured-by-white" class="captured-pieces"></div>
+                </div>
+
+            </div><!-- end game-area -->
+        </main>
+    </div><!-- end app-container -->
+    <script src="script.js"></script>
+</body>
+
+</html>
